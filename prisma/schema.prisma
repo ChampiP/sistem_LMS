@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Esta será tu URL de Supabase
+}
+
+// Enum para definir roles de usuario
+enum UserRole {
+  ALUMNO
+  DOCENTE
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String?
+  role         UserRole      @default(ALUMNO)
+  createdAt    DateTime      @default(now())
+  
+  // Relaciones
+  coursesAsTeacher  Course[]      @relation("TeacherCourses")
+  enrollments       Enrollment[]  @relation("StudentEnrollments")
+  attempts          QuizAttempt[] @relation("StudentAttempts")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  
+  teacherId String
+  teacher   User   @relation("TeacherCourses", fields: [teacherId], references: [id])
+  
+  enrollments Enrollment[]
+  quizzes     Quiz[]
+}
+
+// Tabla pivote para la relación muchos-a-muchos entre Alumnos y Cursos
+model Enrollment {
+  id        String   @id @default(cuid())
+  studentId String
+  courseId  String
+  createdAt DateTime @default(now())
+  
+  student User   @relation("StudentEnrollments", fields: [studentId], references: [id])
+  course  Course @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId])
+}
+
+model Quiz {
+  id          String   @id @default(cuid())
+  title       String
+  courseId    String
+  timeLimit   Int // Límite de tiempo en minutos
+  maxAttempts Int // Número máximo de intentos
+  createdAt   DateTime @default(now())
+
+  course    Course        @relation(fields: [courseId], references: [id])
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id     String @id @default(cuid())
+  text   String
+  quizId String
+  
+  quiz    Quiz     @relation(fields: [quizId], references: [id])
+  options Option[]
+  answers Answer[]
+}
+
+model Option {
+  id         String  @id @default(cuid())
+  text       String
+  isCorrect  Boolean @default(false)
+  questionId String
+
+  question Question @relation(fields: [questionId], references: [id])
+  answers  Answer[]
+}
+
+// Registro de cada intento de un alumno en un quiz
+model QuizAttempt {
+  id          String    @id @default(cuid())
+  studentId   String
+  quizId      String
+  score       Float? // Calificación final
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  warnings    Int       @default(0) // Conteo de advertencias anti-trampa
+  isBlocked   Boolean   @default(false) // Si el quiz fue bloqueado
+
+  student User     @relation("StudentAttempts", fields: [studentId], references: [id])
+  quiz    Quiz     @relation(fields: [quizId], references: [id])
+  answers Answer[]
+}
+
+// Almacena la respuesta seleccionada por el alumno para cada pregunta en un intento
+model Answer {
+  id               String      @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String
+  
+  attempt        QuizAttempt @relation(fields: [attemptId], references: [id])
+  question       Question    @relation(fields: [questionId], references: [id])
+  selectedOption Option      @relation(fields: [selectedOptionId], references: [id])
+}
