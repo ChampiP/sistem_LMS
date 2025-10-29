@@ -1,5 +1,6 @@
-import Navbar from '../../_components/Navbar';
+
 "use client";
+import Navbar from '../../_components/Navbar';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
