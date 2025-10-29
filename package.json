@@ -11,6 +11,7 @@
     "integration": "node scripts/integration-test.js",
     "postinstall": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+  "prisma:deploy": "prisma migrate deploy",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {

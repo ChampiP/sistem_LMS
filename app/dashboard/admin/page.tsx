@@ -22,10 +22,10 @@ export default async function AdminPage() {
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto bg-white rounded-md overflow-hidden">
           <thead className="bg-gray-100">
-            <tr>
+              <tr>
               <th className="px-4 py-2 text-left">Alumno</th>
               <th className="px-4 py-2 text-left">Quiz</th>
-              <th className="px-4 py-2">Score</th>
+              <th className="px-4 py-2">Nota</th>
               <th className="px-4 py-2">Warnings</th>
               <th className="px-4 py-2">Bloqueado</th>
               <th className="px-4 py-2">Inicio</th>

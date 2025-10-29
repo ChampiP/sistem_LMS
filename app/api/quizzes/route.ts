@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import prisma from '@/lib/prisma';
+import { validateQuizPayload } from '@/lib/validators';
 
 async function getJwtPayload(token: string) {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -29,9 +30,10 @@ export async function POST(request: Request) {
     const actorId = (payload as any).sub ?? (payload as any).userId ?? (payload as any).id;
     if (role !== 'DOCENTE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const body = await request.json();
-    const { title, courseId, timeLimit, maxAttempts, questions } = body;
-    if (!title || !courseId) return NextResponse.json({ error: 'title and courseId required' }, { status: 400 });
+  const body = await request.json();
+  const { title, courseId, timeLimit, maxAttempts, questions } = body;
+  const v = validateQuizPayload(body);
+  if (!v.valid) return NextResponse.json({ error: 'Invalid payload', details: v.errors }, { status: 400 });
 
     // verify teacher owns the course
     const course = await prisma.course.findUnique({ where: { id: courseId } });

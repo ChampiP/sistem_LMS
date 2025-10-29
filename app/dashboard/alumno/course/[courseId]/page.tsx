@@ -1,12 +1,23 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Navbar from '../../_components/Navbar';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 type Quiz = { id: string; title: string; timeLimit?: number; maxAttempts?: number };
 
 export default function CoursePage() {
+  const [profile, setProfile] = useState<{ name?: string | null } | null>(null);
+  useEffect(() => { fetchProfile(); }, []);
+  async function fetchProfile() {
+    try {
+      const res = await fetch('/api/me', { credentials: 'include' });
+      if (!res.ok) return;
+      const j = await res.json();
+      setProfile(j);
+    } catch (e) { /* ignore */ }
+  }
   const params = useParams();
   const courseId = params.courseId as string;
   const [course, setCourse] = useState<any | null>(null);
@@ -37,6 +48,7 @@ export default function CoursePage() {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 p-8">
       <div className="max-w-4xl mx-auto">
+        <Navbar name={profile?.name ?? null} />
         <div className="mb-4"><Link href="/dashboard/alumno" className="text-sm text-gray-300 hover:underline">← Volver</Link></div>
         {course ? (
           <>
@@ -68,7 +80,7 @@ export default function CoursePage() {
               {attempts && attempts.length > 0 && (
                 <table className="w-full text-left text-sm">
                   <thead className="text-gray-400">
-                    <tr><th className="px-2 py-2">Quiz</th><th className="px-2 py-2">Score</th><th className="px-2 py-2">Inicio</th></tr>
+                    <tr><th className="px-2 py-2">Quiz</th><th className="px-2 py-2">Nota</th><th className="px-2 py-2">Inicio</th></tr>
                   </thead>
                   <tbody>
                     {attempts.map(a => (

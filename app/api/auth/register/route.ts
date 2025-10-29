@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { isEmail, validatePassword } from '@/lib/validators';
 
 /**
  * Endpoint de API para registrar un nuevo usuario (Alumno por defecto).
@@ -17,6 +18,15 @@ export async function POST(request: Request) {
         { error: 'Faltan campos obligatorios (nombre, email, contraseña)' },
         { status: 400 } // 400 Bad Request
       );
+    }
+
+    if (!isEmail(email)) {
+      return NextResponse.json({ error: 'Formato de email inválido' }, { status: 400 });
+    }
+
+    const passCheck = validatePassword(password);
+    if (!passCheck.valid) {
+      return NextResponse.json({ error: passCheck.error }, { status: 400 });
     }
 
     // --- 2. Verificar si el usuario ya existe ---

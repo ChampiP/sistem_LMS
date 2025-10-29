@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserId } from '@/lib/auth'; // Asumimos que existe un helper de autenticación
+import { validateSubmitAgainstQuiz } from '@/lib/validators';
 
 interface AnswerPayload {
   questionId: string;
@@ -19,15 +20,13 @@ export async function POST(request: Request, { params }: { params: { quizId: str
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Obtener el quiz y las respuestas correctas desde la BD
+    // 1. Obtener el quiz y sus preguntas/opciones desde la BD (necesitamos todas las opciones para validar)
     const quizWithCorrectAnswers = await prisma.quiz.findUnique({
       where: { id: quizId },
       include: {
         questions: {
           include: {
-            options: {
-              where: { isCorrect: true },
-            },
+            options: true,
           },
         },
       },
@@ -37,24 +36,30 @@ export async function POST(request: Request, { params }: { params: { quizId: str
       return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
     }
 
-    // 2. Crear un mapa de referencia para las respuestas correctas
+    // 2. Validar que las respuestas coinciden con las preguntas/opciones del quiz
+    const validation = validateSubmitAgainstQuiz(quizWithCorrectAnswers, answers as any[]);
+    if (!validation.valid) {
+      return NextResponse.json({ error: 'Invalid answers', details: validation.errors }, { status: 400 });
+    }
+
+    // 3. Crear un mapa de respuestas correctas
     const correctAnswersMap = new Map<string, string>();
     quizWithCorrectAnswers.questions.forEach(q => {
-      if (q.options.length > 0) {
-        correctAnswersMap.set(q.id, q.options[0].id);
-      }
+      const correctOpt = (q.options || []).find((o: any) => o.isCorrect);
+      if (correctOpt) correctAnswersMap.set(q.id, correctOpt.id);
     });
 
-    // 3. Calcular la puntuación
+    // 4. Calcular la puntuación
     let correctCount = 0;
-    answers.forEach(answer => {
-      if (correctAnswersMap.get(answer.questionId) === answer.selectedOptionId) {
-        correctCount++;
-      }
+    (answers as any[]).forEach(answer => {
+      if (correctAnswersMap.get(answer.questionId) === answer.selectedOptionId) correctCount++;
     });
 
     const totalQuestions = quizWithCorrectAnswers.questions.length;
-    const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+    // nota en escala 0..20, sin decimales. Redondeamos al entero más cercano.
+    const nota = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 20) : 0;
+    // además devolvemos porcentaje por compatibilidad
+    const scorePercent = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
     // 4. Guardar el intento y las respuestas: preferimos actualizar el intento activo
     const activeAttempt = await prisma.quizAttempt.findFirst({
@@ -68,7 +73,7 @@ export async function POST(request: Request, { params }: { params: { quizId: str
       savedAttempt = await prisma.quizAttempt.update({
         where: { id: activeAttempt.id },
         data: {
-          score: score,
+          score: nota,
           completedAt: new Date(),
           answers: {
             create: answers.map(ans => ({
@@ -84,7 +89,7 @@ export async function POST(request: Request, { params }: { params: { quizId: str
         data: {
           studentId: studentId,
           quizId: quizId,
-          score: score,
+          score: nota,
           completedAt: new Date(),
           answers: {
             create: answers.map(ans => ({
@@ -99,7 +104,8 @@ export async function POST(request: Request, { params }: { params: { quizId: str
 
     return NextResponse.json({ 
       message: 'Quiz submitted successfully', 
-      score: savedAttempt.score,
+      nota: savedAttempt.score,
+      scorePercent,
       attemptId: savedAttempt.id,
     });
 

@@ -154,18 +154,19 @@ export default function CoursesPage() {
   const [duplicatingQuiz, setDuplicatingQuiz] = useState<any | null>(null);
   const [duplicateTitle, setDuplicateTitle] = useState('');
   const [duplicateCourseId, setDuplicateCourseId] = useState('');
-  const [duplicateQuestionsJson, setDuplicateQuestionsJson] = useState('');
+  const [duplicateQuestions, setDuplicateQuestions] = useState<any[]>([]);
   const [showDuplicateQuestionsEditor, setShowDuplicateQuestionsEditor] = useState(false);
 
   function openDuplicateQuiz(q: any) {
     setDuplicatingQuiz(q);
     setDuplicateTitle(`Copia - ${q.title}`);
     setDuplicateCourseId(q.courseId || (courses[0] && courses[0].id) || '');
-    try {
-      setDuplicateQuestionsJson(JSON.stringify(q.questions ?? [], null, 2));
-    } catch (e) {
-      setDuplicateQuestionsJson('[]');
-    }
+    // initialize editable questions structure (deep copy)
+    const qs = (q.questions || []).map((qq: any) => ({
+      text: qq.text || '',
+      options: (qq.options || []).map((o: any) => ({ text: o.text || '', isCorrect: !!o.isCorrect }))
+    }));
+    setDuplicateQuestions(qs);
   }
 
   async function createDuplicateQuiz() {
@@ -174,7 +175,8 @@ export default function CoursesPage() {
     try {
       let questionsPayload = duplicatingQuiz.questions || [];
       if (showDuplicateQuestionsEditor) {
-        try { questionsPayload = JSON.parse(duplicateQuestionsJson || '[]'); } catch (e) { return setMessage('JSON de preguntas inválido'); }
+        // validate and use duplicateQuestions state
+        questionsPayload = duplicateQuestions.map(q => ({ text: q.text, options: (q.options || []).map((o: any) => ({ text: o.text, isCorrect: !!o.isCorrect })) }));
       }
       const payload: any = { title: duplicateTitle.trim(), courseId: duplicateCourseId || duplicatingQuiz.courseId, timeLimit: duplicatingQuiz.timeLimit, maxAttempts: duplicatingQuiz.maxAttempts, questions: questionsPayload };
       const res = await fetch('/api/quizzes', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -295,11 +297,11 @@ export default function CoursesPage() {
                 {!loadingAttempts && quizAttempts && quizAttempts.length > 0 && (
                   <div className="space-y-3">
                     <table className="w-full table-auto text-left text-sm">
-                      <thead className="text-gray-400">
+                          <thead className="text-gray-400">
                         <tr>
                           <th className="px-2 py-2">Alumno</th>
                           <th className="px-2 py-2">Nombre</th>
-                          <th className="px-2 py-2">Score</th>
+                          <th className="px-2 py-2">Nota</th>
                           <th className="px-2 py-2">Correcciones</th>
                           <th className="px-2 py-2">Warnings</th>
                           <th className="px-2 py-2">Inicio</th>
@@ -343,10 +345,34 @@ export default function CoursesPage() {
               </select>
               <div className="mb-2">
                 <label className="text-sm text-gray-400 mr-2">Editar preguntas antes de duplicar?</label>
-                <button onClick={() => setShowDuplicateQuestionsEditor(v => !v)} className="ml-2 px-2 py-1 bg-slate-700 rounded text-sm">{showDuplicateQuestionsEditor ? 'Ocultar' : 'Editar preguntas'}</button>
+                <button type="button" onClick={() => setShowDuplicateQuestionsEditor(v => !v)} className="ml-2 px-2 py-1 bg-slate-700 rounded text-sm">{showDuplicateQuestionsEditor ? 'Ocultar' : 'Editar preguntas'}</button>
               </div>
               {showDuplicateQuestionsEditor && (
-                <textarea value={duplicateQuestionsJson} onChange={e => setDuplicateQuestionsJson(e.target.value)} className="w-full h-40 p-2 bg-gray-800 rounded mb-2 font-mono text-sm" />
+                <div className="mb-2 space-y-3">
+                  {duplicateQuestions.map((q, qi) => (
+                    <div key={qi} className="p-3 bg-gray-800 rounded">
+                      <div className="flex justify-between items-center mb-2">
+                        <input value={q.text} onChange={e => { const copy = [...duplicateQuestions]; copy[qi].text = e.target.value; setDuplicateQuestions(copy); }} placeholder={`Pregunta ${qi+1}`} className="w-full p-2 bg-gray-900 rounded" />
+                        <button type="button" onClick={() => { setDuplicateQuestions(duplicateQuestions.filter((_, i) => i !== qi)); }} className="ml-2 px-2 py-1 bg-red-600 rounded">Eliminar</button>
+                      </div>
+                      <div className="space-y-2">
+                        {(q.options || []).map((opt: any, oi: number) => (
+                          <div key={oi} className="flex items-center gap-2">
+                            <input type="radio" name={`correct-${qi}`} checked={!!opt.isCorrect} onChange={() => { const copy = [...duplicateQuestions]; copy[qi].options = copy[qi].options.map((oo: any, idx: number) => ({ ...oo, isCorrect: idx === oi })); setDuplicateQuestions(copy); }} />
+                            <input value={opt.text} onChange={e => { const copy = [...duplicateQuestions]; copy[qi].options[oi].text = e.target.value; setDuplicateQuestions(copy); }} className="flex-1 p-2 bg-gray-900 rounded" />
+                            <button type="button" onClick={() => { const copy = [...duplicateQuestions]; copy[qi].options = copy[qi].options.filter((_, i) => i !== oi); setDuplicateQuestions(copy); }} className="px-2 py-1 bg-red-600 rounded">Eliminar</button>
+                          </div>
+                        ))}
+                        <div>
+                          <button type="button" onClick={() => { const copy = [...duplicateQuestions]; copy[qi].options = [...(copy[qi].options||[]), { text: '', isCorrect: false }]; setDuplicateQuestions(copy); }} className="px-2 py-1 bg-slate-700 rounded">Agregar opción</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div>
+                    <button type="button" onClick={() => setDuplicateQuestions([...duplicateQuestions, { text: '', options: [{ text: '', isCorrect: true }] }])} className="px-3 py-1 bg-green-600 rounded">Agregar pregunta</button>
+                  </div>
+                </div>
               )}
               <div className="flex justify-end gap-2">
                 <button onClick={() => setDuplicatingQuiz(null)} className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded">Cancelar</button>

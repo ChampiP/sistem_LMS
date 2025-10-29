@@ -135,12 +135,12 @@ export default function AlumnosPage() {
                     <table className="w-full table-auto text-left text-sm">
                       <thead className="text-gray-400">
                         <tr>
-                          <th className="px-2 py-2">Curso</th>
-                          <th className="px-2 py-2">Quiz</th>
-                          <th className="px-2 py-2">Score</th>
-                          <th className="px-2 py-2">Warnings</th>
-                          <th className="px-2 py-2">Inicio</th>
-                        </tr>
+                            <th className="px-2 py-2">Curso</th>
+                            <th className="px-2 py-2">Quiz</th>
+                            <th className="px-2 py-2">Nota</th>
+                            <th className="px-2 py-2">Warnings</th>
+                            <th className="px-2 py-2">Inicio</th>
+                          </tr>
                       </thead>
                       <tbody>
                         {studentAttempts[s.id].map((a: any) => (

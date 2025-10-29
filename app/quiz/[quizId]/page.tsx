@@ -55,7 +55,7 @@ const FinishedOverlay = ({ score }: { score: number | null }) => (
     <FullScreenOverlay>
         <h2 className="text-3xl font-bold text-blue-600 mb-4">Quiz Finalizado</h2>
         <p className="text-gray-700 text-lg">Tu calificación es:</p>
-        <p className="text-6xl font-bold text-gray-800 my-4">{score?.toFixed(1) ?? '-'}%</p>
+    <p className="text-6xl font-bold text-gray-800 my-4">{score ?? '-'} /20</p>
         <p className="text-gray-600">Ya puedes cerrar esta ventana.</p>
     </FullScreenOverlay>
 );
@@ -113,8 +113,9 @@ export default function QuizPage({ params }: { params: { quizId: string } }) {
 
       if (!res.ok) throw new Error('Error al entregar el quiz.');
       
-      const result = await res.json();
-      setFinalScore(result.score);
+  const result = await res.json();
+  // server returns nota (0..20)
+  setFinalScore(result.nota ?? result.score ?? null);
       setStatus('finished');
     } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');

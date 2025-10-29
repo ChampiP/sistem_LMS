@@ -70,7 +70,7 @@ async function run() {
     body: JSON.stringify(answers),
   });
   const submitJson = await submitRes.json().catch(() => ({}));
-  console.log('Submit status:', submitRes.status, submitJson.message || submitJson.error || submitJson.score || '');
+  console.log('Submit status:', submitRes.status, submitJson.message || submitJson.error || submitJson.nota || '');
   console.log('Submit response:', submitJson);
 
   await prisma.$disconnect();

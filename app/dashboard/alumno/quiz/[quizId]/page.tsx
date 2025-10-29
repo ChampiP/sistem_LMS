@@ -1,3 +1,4 @@
+import Navbar from '../../_components/Navbar';
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -6,6 +7,16 @@ import { useTimer } from '@/lib/hooks/useTimer';
 import { useQuizAntiCheat } from '@/lib/hooks/useQuizAntiCheat';
 
 export default function QuizPage() {
+  const [profile, setProfile] = useState<{ name?: string | null } | null>(null);
+  useEffect(() => { fetchProfile(); }, []);
+  async function fetchProfile() {
+    try {
+      const res = await fetch('/api/me', { credentials: 'include' });
+      if (!res.ok) return;
+      const j = await res.json();
+      setProfile(j);
+    } catch (e) { /* ignore */ }
+  }
   const params = useParams();
   const router = useRouter();
   const quizId = params.quizId as string;
@@ -68,7 +79,8 @@ export default function QuizPage() {
       const res = await fetch(`/api/quizzes/${quizId}/submit`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al enviar');
-      setMessage(`Enviado. Score: ${data.score ?? '-'}%`);
+      // server returns nota (0..20) and scorePercent; show nota
+      setMessage(`Enviado. Nota: ${data.nota ?? '-'} /20`);
       router.push('/dashboard/alumno');
     } catch (e: any) { setMessage(e.message || 'Error'); }
   }
@@ -126,6 +138,7 @@ export default function QuizPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 p-8">
       <div className="max-w-3xl mx-auto">
+        <Navbar name={profile?.name ?? null} />
         <div className="mb-4"><a href="/dashboard/alumno" className="text-sm text-gray-300 hover:underline">← Volver</a></div>
         {message && <div className="mb-4 p-3 bg-gray-800 rounded">{message}</div>}
         {quiz ? (

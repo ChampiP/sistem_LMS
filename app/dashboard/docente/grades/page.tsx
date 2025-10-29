@@ -103,7 +103,7 @@ export default function GradesPage() {
                   <thead className="text-slate-400">
                     <tr>
                       <th className="px-2 py-2">Alumno</th>
-                      <th className="px-2 py-2">Score</th>
+                      <th className="px-2 py-2">Nota</th>
                       <th className="px-2 py-2">Warnings</th>
                       <th className="px-2 py-2">Bloqueado</th>
                       <th className="px-2 py-2">Inicio</th>

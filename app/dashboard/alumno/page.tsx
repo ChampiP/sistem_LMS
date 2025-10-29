@@ -93,11 +93,11 @@ export default function AlumnoDashboard() {
             </section>
 
             <section className="p-4 bg-gray-800 rounded">
-              <h2 className="text-xl font-semibold mb-3">Últimas Calificaciones</h2>
+                  <h2 className="text-xl font-semibold mb-3">Últimas Calificaciones</h2>
               {recentGrades.length === 0 && <div className="text-gray-400">Aún no tienes calificaciones.</div>}
               {recentGrades.length > 0 && (
                 <table className="w-full text-left text-sm">
-                  <thead className="text-gray-400"><tr><th className="px-2 py-2">Quiz</th><th className="px-2 py-2">Curso</th><th className="px-2 py-2">Score</th><th className="px-2 py-2">Fecha</th></tr></thead>
+                  <thead className="text-gray-400"><tr><th className="px-2 py-2">Quiz</th><th className="px-2 py-2">Curso</th><th className="px-2 py-2">Nota</th><th className="px-2 py-2">Fecha</th></tr></thead>
                   <tbody>
                     {recentGrades.map(a => (
                       <tr key={a.id} className="border-t border-slate-800"><td className="px-2 py-2">{a.quiz?.title}</td><td className="px-2 py-2">{a.quiz?.course?.title}</td><td className="px-2 py-2">{a.score ?? '-'}</td><td className="px-2 py-2">{a.startedAt ? new Date(a.startedAt).toLocaleString() : '-'}</td></tr>
