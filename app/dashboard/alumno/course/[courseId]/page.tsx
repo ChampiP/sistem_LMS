@@ -67,7 +67,7 @@ export default function CoursePage() {
                     </div>
                     <div className="flex gap-2">
                       <Link href={`/dashboard/alumno/quiz/${q.id}?autostart=1`} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm">Iniciar</Link>
-                      <Link href={`/dashboard/alumno/quiz/${q.id}?autostart=1`} className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm">Ver</Link>
+                      <Link href={`/dashboard/alumno/quiz/${q.id}`} className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm">Ver</Link>
                     </div>
                   </li>
                 ))}
