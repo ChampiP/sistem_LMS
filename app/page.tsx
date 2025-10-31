@@ -154,7 +154,7 @@ export default function HomePage() {
         // Preferimos confiar en la cookie HttpOnly que establece el servidor.
         const { token, user } = data;
         // Limpio: no escribir cookie accesible desde JS para mayor seguridad.
-        setSuccess('Inicio de sesión exitoso. Redirigiendo...');
+        setSuccess('un momento lo estamos redirigiendo...');
 
         // Redirigir según rol (defensivo: aceptar mayúsculas/minúsculas y usar fallback)
         const role = (user && user.role) ? String(user.role).toUpperCase() : null;
@@ -196,7 +196,7 @@ export default function HomePage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-blue-400">
-            HLM Learning System
+            HML EDUCA
           </h1>
           <p className="text-lg text-gray-400 mt-2">
             {isLogin

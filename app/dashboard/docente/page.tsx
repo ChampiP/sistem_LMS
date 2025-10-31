@@ -45,7 +45,7 @@ export default function DocenteIndex() {
           </Link>
         </div>
 
-        <div className="mt-8 text-sm text-gray-500">¿Necesitas más funciones? Puedo añadir export CSV, búsqueda y paginación.</div>
+        <div className="mt-8 text-sm text-gray-500">en proceso ...</div>
       </div>
     </div>
   );
