@@ -77,7 +77,7 @@ export default function AlumnoDashboard() {
             <section className="p-4 bg-gray-800 rounded">
               <h2 className="text-xl font-semibold mb-3">Próximos Quizzes</h2>
               {upcoming.length === 0 && <div className="text-gray-400">No hay quizzes próximos.</div>}
-              <ul className="space-y-2">
+             <ul className="space-y-2">
                 {upcoming.map((q: any) => (
                   <li key={q.id} className="p-3 bg-gray-900 rounded flex justify-between items-center">
                     <div>
@@ -85,7 +85,8 @@ export default function AlumnoDashboard() {
                       <div className="text-sm text-gray-400">Curso: {q.courseTitle}</div>
                     </div>
                     <div>
-                      <Link href={`/dashboard/alumno/quiz/${q.id}?autostart=1`} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm">Ir al Quiz</Link>
+                      {/* CORRECCIÓN: Se elimina ?autostart=1 para que la página muestre la pantalla de "Iniciar" */}
+                      <Link href={`/dashboard/alumno/quiz/${q.id}`} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm">Ir al Quiz</Link>
                     </div>
                   </li>
                 ))}
